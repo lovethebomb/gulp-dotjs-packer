@@ -16,9 +16,11 @@ module.exports = function(opt) {
     };
     if (!opt.templateSettings) opt.templateSettings = doT.templateSettings;
     if (!opt.templateName) opt.templateName = false;
+    if (!opt.templateSuffix) opt.templateSuffix = false;
     // RequireJS
     if (!opt.requirejs) opt.requirejs = false;
     if (!opt.requirejsNamespace) opt.requirejsNamespace = false;
+    if (!opt.requirejsModuleName) opt.requirejsModuleName = false;
 
     var buffer = [];
     var firstFile = null;
@@ -26,7 +28,6 @@ module.exports = function(opt) {
     var processName = opt.processName;
     var variable = opt.variable;
     var templateSettings = opt.templateSettings;
-    var templateName = opt.templateName;
 
     //
     var loadRegex = /\{\{\#\#\s*(def\.\w+)\s*\:\s*load\(['|"](.*?)['|"]\,?\s*(\{\s*(.*?\s*?)+?\})?\s*\);?\s*\#?\}\}/g;
@@ -141,7 +142,12 @@ module.exports = function(opt) {
 
         var template = "";
         var compiled = doT.template(content, settings, defs).toString();
-        var templateName = templateName || path.basename(path.join(fullPath, '..')) + '_editor';
+        var templateSuffix = (opt.templateSuffix ? opt.templateSuffix : '');
+
+        var templateName = (opt.templateName && typeof opt.templateName == 'function' ? opt.templateName(fullPath) : path.basename(path.join(fullPath, '.'), '.jst'))
+        templateName = templateName + templateSuffix;
+
+                console.log('tempalteNAme', templateName);
         template += variable + "['" + templateName + "'] = " + compiled;
         return template;
     }
@@ -164,8 +170,9 @@ module.exports = function(opt) {
         var joinedContents = buffer.join(opt.newLine);
         // Implemente RequireJS + Namespace
         var define = (opt.requirejsNamespace ? opt.requirejsNamespace + '.define' : 'define');
-        console.log('rjs namespace:', opt.requirejsNamespace, define);
-        var header = define + "('editor-templates', [], function() {";
+        var moduleName = (opt.requirejsModuleName ? opt.requirejsModuleName : 'templates');
+        console.log('rjs namespace:', opt.requirejsNamespace, opt.requirejsModuleName, define);
+        var header = define + "('" + moduleName + "', [], function() {";
         //var header = define + '(function() {';
             // Encode HTML
             header += 'function e() {var r={"&":"&#38;","<":"&#60;",">":"&#62;",\'"\':\'&#34;\',"\'":\'&#39;\',"/":\'&#47;\'}, reg = /&(?!#?\w+;)|<|>|"|\'|\\//g;return function() {return this ? this.replace(reg, function(m) {return r[m] || m;}) : this;};};String.prototype.encodeHTML=e();';
