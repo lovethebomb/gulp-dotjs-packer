@@ -39,7 +39,7 @@ module.exports = function(opt) {
 
     var loadPartial = function(m, filePath, loadPath, fullPath, obj) {
         var customVars = {}, _this = this, pendingPartialLoads = {};
-        console.log('loadPartial', filePath, loadPath, path.resolve(path.dirname(fullPath), loadPath));
+        console.log('loadPartial', filePath, loadPath);
 
         var _filePath = path.resolve(path.dirname(fullPath), loadPath);
         var content = fs.readFileSync(_filePath, 'utf8').replace(/<\!\-\-(.|\n)*\!\-\->/g, '');
@@ -56,15 +56,15 @@ module.exports = function(opt) {
         if(typeof obj !== 'undefined') {
             var matches = obj.match(/(\w+)\s*\:(.*)\s*/g);
             for(var i = 0; i < matches.length; i++) {
-                var _matches = /(\w+)\s*\:(.*)\s*/g.exec(matches[i])
-                    , key = _matches[1]
-                    , value = _matches[2].replace(/'|"|\,|\s*/g, '')
-                    , regex = new RegExp('\\{\\{\\$\\s*(' + key + ')\\s*\\:?\\s*(.*?)\\s*\\}\\}', 'g');
+                var _matches = /(\w+)\s*\:(.*)\s*/g.exec(matches[i]),
+                    key = _matches[1],
+                    value = _matches[2].replace(/'|"|\,|\s*/g, ''),
+                    regex = new RegExp('\\{\\{\\$\\s*(' + key + ')\\s*\\:?\\s*(.*?)\\s*\\}\\}', 'g');
 
                 content = content.replace(regex, function(m, key, defaultValue) {
                     if(typeof value === 'undefined' && typeof defaultValue === 'undefined') {
                         return '';
-                    } else if(typeof val !== 'undefined') {
+                    } else if(typeof value !== 'undefined') {
                         return defaultValue;
                     } else {
                         return value;
@@ -89,14 +89,13 @@ module.exports = function(opt) {
         });
       return content;
 
-    }
+    };
 
     /**
      * Loads pending partials.
      */
 
     var loadPendingPartials = function(content, pendingPartialLoads) {
-    console.log('loadPendingpartials');
       for(var namespace in pendingPartialLoads) {
         content = content.replace(
           new RegExp('\\{\\{\\#\\s*' + namespace + '\\s*\\}\\}', 'g'),
@@ -115,7 +114,7 @@ module.exports = function(opt) {
       var _this = this, pendingPartialLoads = {};
 
       // Log file path
-      console.log('getFileContent', filePath, fullPath);
+      //console.log('getFileContent', filePath, fullPath);
 
       // Return file content
       content = content
@@ -134,26 +133,23 @@ module.exports = function(opt) {
       return content;
     };
 
-    //
-    //
     function handleCompile(content, settings, defs, variable, file, fullPath) {
-        console.log('call getFileContent', fullPath, 'path:' + file);
-        var content = getFileContent(content, file, fullPath);
+        content = getFileContent(content, file, fullPath);
 
         var template = "";
         var compiled = doT.template(content, settings, defs).toString();
         var templateSuffix = (opt.templateSuffix ? opt.templateSuffix : '');
 
-        var templateName = (opt.templateName && typeof opt.templateName == 'function' ? opt.templateName(fullPath) : path.basename(path.join(fullPath, '.'), '.jst'))
+        var templateName = (opt.templateName && typeof opt.templateName == 'function' ? opt.templateName(fullPath) : path.basename(path.join(fullPath, '.'), '.jst'));
         templateName = templateName + templateSuffix;
 
-                console.log('tempalteNAme', templateName);
+        console.log('=> templateName', templateName);
         template += variable + "['" + templateName + "'] = " + compiled;
         return template;
     }
 
     function proccessContents(contents) {
-        return contents.toString('utf8')
+        return contents.toString('utf8');
     }
 
     function bufferContents(file) {
